@@ -1,5 +1,8 @@
 ASCII Rotating Sphere with Caustic Background
-This project is a JavaScript simulation of a rotating ASCII sphere with a dynamic, caustic-style background. The sphere is made up of ASCII characters (in this case, the text is ascii numbers), and the background features smooth, morphing colors that create an underwater caustic effect.
+
+This project is a JavaScript simulation of a rotating ASCII sphere with a dynamic, caustic-style background. 
+
+The sphere is made up of ASCII characters (in this case, the text is ascii numbers), and the background features smooth, morphing colors that create an underwater caustic effect.
 
 Features
 Rotating ASCII Sphere:
