@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII Rotating Sphere with Caustic Background</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: monospace;
+      overflow: hidden;
+      margin: 0;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const radius = Math.min(canvas.width, canvas.height) / 3.5; // Triple the diameter
+    const chars = "1234567890"; // ASCII characters to use
+    const numPoints = 1000; // Increased points for larger sphere
+    const rotationSpeed = 0.002; // Slow rotation speed
+    const points = [];
+
+    // Set font size to 5x larger
+    const baseFontSize = 20; // Base font size
+    const fontSize = baseFontSize * 1.1; // bit larger
+    ctx.font = `${fontSize}px monospace`;
+    ctx.textAlign = 'center'; // Center the characters
+
+    // Generate points on the sphere
+    for (let i = 0; i < numPoints; i++) {
+      const theta = Math.random() * Math.PI * 2; // Azimuthal angle
+      const phi = Math.acos(2 * Math.random() - 1); // Polar angle
+      const x = radius * Math.sin(phi) * Math.cos(theta);
+      const y = radius * Math.sin(phi) * Math.sin(theta);
+      const z = radius * Math.cos(phi);
+      points.push({ x, y, z });
+    }
+
+    // Random initial rotation angles
+    let rotationX = Math.random() * Math.PI * 2;
+    let rotationY = Math.random() * Math.PI * 2;
+    let rotationZ = Math.random() * Math.PI * 2;
+
+    // Caustic background variables
+    let time = 0; // Time variable for animation
+    const noiseScale = 0.01; // Scale of the noise
+    const colorSpeed = 0.01; // Speed of color morphing
+
+    // Simple noise function (replace with Perlin/Simplex noise if needed)
+    function simpleNoise(x, y, t) {
+      return Math.sin(x * noiseScale + t) * Math.cos(y * noiseScale + t);
+    }
+
+    // Function to generate caustic-style colors
+    function getCausticColor(x, y, time) {
+      const noiseValue = simpleNoise(x, y, time);
+      const r = Math.floor((noiseValue + 1) * 128);
+      const g = Math.floor((noiseValue + 1) * 128);
+      const b = Math.floor((noiseValue + 1) * 255);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // Render function
+    function render() {
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw caustic background
+      for (let x = 0; x < canvas.width; x += 20) {
+        for (let y = 0; y < canvas.height; y += 20) {
+          const color = getCausticColor(x, y, time);
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, 20, 20);
+        }
+      }
+
+      // Draw the rotating sphere
+      points.forEach(p => {
+        // Rotate the point
+        let rotated = rotateX(p, rotationX);
+        rotated = rotateY(rotated, rotationY);
+        rotated = rotateZ(rotated, rotationZ);
+
+        // Project to 2D
+        const scale = 200 / (200 + rotated.z); // Perspective projection
+        const x2d = rotated.x * scale + canvas.width / 2;
+        const y2d = rotated.y * scale + canvas.height / 2;
+
+        // Map depth to grayscale
+        const depth = (rotated.z + radius) / (2 * radius); // Normalize depth to [0, 1]
+        const gray = Math.floor(255 * depth);
+        const char = chars[Math.floor(Math.random() * chars.length)];
+
+        // Draw the character
+        ctx.fillStyle = `rgb(${255 - gray}, ${255 - gray}, ${255 - gray})`;
+        ctx.fillText(char, x2d, y2d);
+      });
+
+      // Update rotation angles
+      rotationX += rotationSpeed;
+      rotationY += rotationSpeed;
+      rotationZ += rotationSpeed;
+
+      // Update time for caustic animation
+      time += colorSpeed;
+
+      requestAnimationFrame(render);
+    }
+
+    // Rotation functions
+    function rotateX(p, angle) {
+      const y = p.y * Math.cos(angle) - p.z * Math.sin(angle);
+      const z = p.y * Math.sin(angle) + p.z * Math.cos(angle);
+      return { ...p, y, z };
+    }
+
+    function rotateY(p, angle) {
+      const x = p.x * Math.cos(angle) + p.z * Math.sin(angle);
+      const z = -p.x * Math.sin(angle) + p.z * Math.cos(angle);
+      return { ...p, x, z };
+    }
+
+    function rotateZ(p, angle) {
+      const x = p.x * Math.cos(angle) - p.y * Math.sin(angle);
+      const y = p.x * Math.sin(angle) + p.y * Math.cos(angle);
+      return { ...p, x, y };
+    }
+
+    // Start the animation
+    render();
+  </script>
+</body>
+</html>
